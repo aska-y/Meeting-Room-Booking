@@ -1,0 +1,157 @@
+{% extends "core/base.html" %}
+
+{% block title %}Room{% endblock title %}
+
+{% block content %}
+
+<h1 class="mt-4">{{ room }}</h1>
+<!-- Breadcrumb -->
+<ol class="breadcrumb mb-4">
+    <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
+    <li class="breadcrumb-item active">{{ room }}</li>
+</ol>
+<!-- Calendar -->
+<div class="mb-5">
+    <!-- FullCalendar -->
+    <div id="calendar"></div>
+</div>
+<!-- Cancel/Confirm Btn -->
+<div class="row mb-5">
+    <div class="col text-end">
+        <a href="{% url 'room' room.pk %}" id="cancelBtn" class="btn btn-secondary disabled">キャンセル</a>
+    </div>
+    <form class="col" action="" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="room", value={{ room.pk }}>
+        <input type="hidden" name="user", value={{ user.pk }}>
+        <input type="hidden" name="title", value="", id="inputTitle">
+        <input type="hidden" name="start_time",value="", id="inputStartTime">
+        <input type="hidden" name="end_time", value="", id="inputEndTime">
+
+        <button id="confirmBtn" type="submit" class="btn btn-primary disabled">予約を確定する</button>
+    </form>
+</div>            
+
+{% endblock content %}
+
+
+{% block script %}
+ <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
+ <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        //日時をDjangoに適した形にフォーマット
+        function formatDateTime(datetime){
+            const year = datetime.getFullYear();
+            const month = String(datetime.getMonth()+1).padStart(2, '0');
+            const day = String(datetime.getDate()).padStart(2, '0');
+            const hour = String(datetime.getHours()).padStart(2, '0');
+            const minutes = String(datetime.getMinutes()).padStart(2, '0');
+            return `${year}-${month}-${day}T${hour}:${minutes}`;
+        }
+
+        //FullCalendar
+        var calendarEl = document.getElementById('calendar');
+
+        // Djangoから渡された予約情報のJSON
+        const eventsJson = '{{ events|default:"[]"|safe }}'; 
+
+        let events = [];
+        if (eventsJson && eventsJson.trim() !== '') {
+            try {
+                events = JSON.parse(eventsJson);
+            } catch (e) {
+                console.error("JSONのパースに失敗しました:", e);
+            }
+        }
+
+        //FullCalendar設定
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            events: events,
+            initialView: 'timeGridWeek',
+            allDaySlot:false,
+            height:500,
+            locale: 'ja',
+            timeZone:'Asia/Tokyo',
+            slotMinTime: '07:00:00',
+            slotMaxTime: '20:00:00',
+            slotDuration: '00:30:00',
+            businessHours: true,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'timeGridWeek,timeGridDay'
+            },
+            eventBackgroundColor: '#eb8b73',
+            eventBorderColor: '#d45f42',
+
+            selectable: true,
+            selectOverlap: false,
+            //新規予約
+            select: function(info){
+                const bookingTitle = prompt('予約件名を入力してください')
+                if(bookingTitle){
+                    calendar.addEvent({
+                        title: bookingTitle,
+                        start: info.start,
+                        end: info.end,
+                    });
+                    //formに入力値を反映、ボタンを有効化
+                    var inputTitle =  document.getElementById('inputTitle');
+                    var inputStartTime =  document.getElementById('inputStartTime');
+                    var inputEndTime =  document.getElementById('inputEndTime');
+                    inputTitle.value = bookingTitle;
+                    inputStartTime.value = formatDateTime(info.start);
+                    inputEndTime.value = formatDateTime(info.end);
+                    document.getElementById('confirmBtn').classList.remove('disabled');
+                    document.getElementById('cancelBtn').classList.remove('disabled');
+                }
+            },
+
+            //予約の削除
+            eventClick: function(info) {
+                if (confirm('この予約を削除してよろしいですか？')) {
+                    // Djangoの削除URLを作成
+                    let eventId = info.event.id;
+                    let url = `/delete_event/${eventId}/`;
+                     // fetch API で Django に削除リクエストを送信
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': getCookie('csrftoken'), // DjangoのCSRFトークン
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            event_id : eventId
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            // カレンダー上からイベントを削除
+                            info.event.remove(); 
+                        }
+                    });
+            }
+        }
+      });
+      calendar.render();
+    });
+
+    
+    // CSRFトークンを取得するヘルパー関数
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            let cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+  </script>
+{% endblock script %}
