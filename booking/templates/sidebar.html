@@ -1,56 +1,76 @@
+<nav class="h-full flex flex-col bg-gray-900 text-gray-300">
+    <div class="sidebar flex-1 overflow-y-auto py-4">
 
-<nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
-    <div class="sb-sidenav-menu">
-        <div class="nav">
-            <div class="sb-sidenav-menu-heading">
-                会議室一覧
-            </div>
-            <!-- ========== 1st Floor ========== -->
-            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapse1F" aria-expanded="false" aria-controls="collapseLayouts">
-                5階フロア
-                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-            </a>
-            <div class="collapse show" id="collapse1F" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                <nav class="sb-sidenav-menu-nested nav">
-                    {% for room in room_list %}
-                        {% if room.floor == 5 %}
-                            <a class="nav-link" href="{% url 'room' room.pk %}">{{ room }}</a>
-                        {% endif %}
-                    {% endfor %}
-                </nav>
-            </div>
-            <!-- ========== 2nd Floor ========== -->
-            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapse2F" aria-expanded="false" aria-controls="collapseLayouts">
-                6階フロア
-                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-            </a>
-            <div class="collapse show" id="collapse2F" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                <nav class="sb-sidenav-menu-nested nav">
-                    {% for room in room_list %}
-                        {% if room.floor == 6 %}
-                            <a class="nav-link" href="{% url 'room' room.pk %}">{{ room }}</a>
-                        {% endif %}
-                    {% endfor %}
-                </nav>
-            </div>
-            <!-- ========== 3rd Floor ========== -->
-            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapse3F" aria-expanded="false" aria-controls="collapseLayouts">
-                7階フロア
-                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
-            </a>
-            <div class="collapse shows" id="collapse3F" aria-labelledby="headingOne" data-bs-parent="#sidenavAccordion">
-                <nav class="sb-sidenav-menu-nested nav">
-                    {% for room in room_list %}
-                        {% if room.floor == 7 %}
-                            <a class="nav-link" href="{% url 'room' room.pk %}">{{ room }}</a>
-                        {% endif %}
-                    {% endfor %}
-                </nav>
+        <!-- Section Heading -->
+        <div class="px-4 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+            会議室一覧
+        </div>
+
+        <!-- 5階フロア -->
+        <div x-data="{ open: true }">
+            <button
+                @click="open = !open"
+                class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+            >
+                <span>5階フロア</span>
+                <i class="fas fa-angle-down transition-transform duration-200" :class="{'rotate-180' : open}"></i>
+            </button>
+            <div x-show="open" x-transition>
+                {% for room in room_list %}
+                    {% if room.floor == 5 %}
+                        <a href="{% url 'room' room.pk %}" class="block pl-8 pr-4 py-1.5 text-sm text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                            {{ room }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
             </div>
         </div>
+
+        <!-- 6階フロア -->
+        <div x-data="{ open: true }">
+            <button
+                @click="open = !open"
+                class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+            >
+                <span>6階フロア</span>
+                <i class="fas fa-angle-down transition-transform duration-200" :class="{'rotate-180' : open}"></i>
+            </button>
+            <div x-show="open" x-transition>
+                {% for room in room_list %}
+                    {% if room.floor == 6 %}
+                        <a href="{% url 'room' room.pk %}" class="block pl-8 pr-4 py-1.5 text-sm text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                            {{ room }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 7階フロア -->
+        <div x-data="{ open: true }">
+            <button
+                @click="open = !open"
+                class="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+            >
+                <span>7階フロア</span>
+                <i class="fas fa-angle-down transition-transform duration-200" :class="{'rotate-180' : open}"></i>
+            </button>
+            <div x-show="open" x-transition>
+                {% for room in room_list %}
+                    {% if room.floor == 7 %}
+                        <a href="{% url 'room' room.pk %}" class="block pl-8 pr-4 py-1.5 text-sm text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                            {{ room }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
     </div>
-    <div class="sb-sidenav-footer">
-        <div class="small">Logged in as:</div>
-        {{ user}}
+
+    <!-- Footer -->
+    <div class="border-t border-gray-700 px-4 py-3 text-xs text-gray-500">
+        <div>Logged in as:</div>
+        <div class="text-gray-400 font-medium mt-0.5">{{ user }}</div>
     </div>
 </nav>

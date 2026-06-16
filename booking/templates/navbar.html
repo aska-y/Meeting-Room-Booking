@@ -1,16 +1,29 @@
-<nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+<nav class="fixed top-0 left-0 right-0 z-50 flex items-center h-16 bg-gray-800 text-white px-4 shadow-md">
     <!-- Sidebar Toggle -->
-    <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#"><i class="fas fa-bars"></i></button>
-    
+    <button
+        @click="sidebarOpen = !sidebarOpen"
+        class="text-gray-300 hover:text-white mr-4 focus:outline-none"
+    >
+        <i class="fas fa-bars text-lg"></i>
+    </button>
+
     <!-- Navbar Brand -->
-    <a class="navbar-brand ps-3" href="{% url 'home' %}">会議室予約システム</a>
+    <a href="{% url 'home' %}" class="text-white font-semibold text-lg hover:text-gray-300 transition-colors">
+        会議室予約システム
+    </a>
 
     <!-- Login/Logout -->
-     {% if user.is_authenticated %}
-     <form action="{% url 'logout' %}" method="post" class="ms-auto">{% csrf_token %}
-        <button type="submit" class="btn btn-outline-info me-3">Logout</button>
-     </form>
-     {% else %}
-     <a href="{% url 'login' %}" class="btn btn-outline-info me-3">Login</a>
-     {% endif %}
+    <div class="ml-auto">
+        {% if user.is_authenticated %}
+        <form action="{% url 'logout' %}" method="post">{% csrf_token %}
+            <button type="submit" class="border border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-gray-900 px-4 py-1.5 rounded text-sm transition-colors">
+                Logout
+            </button>
+        </form>
+        {% else %}
+        <a href="{% url 'login' %}" class="border border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-gray-900 px-4 py-1.5 rounded text-sm transition-colors">
+            Login
+        </a>
+        {% endif %}
+    </div>
 </nav>

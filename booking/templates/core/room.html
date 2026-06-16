@@ -4,40 +4,52 @@
 
 {% block content %}
 
-<h1 class="mt-4">{{ room }}</h1>
+<h1 class="text-2xl font-bold text-gray-800 mb-2 mt-2">{{ room }}</h1>
+
 <!-- Breadcrumb -->
-<ol class="breadcrumb mb-4">
-    <li class="breadcrumb-item active"><a href="{% url 'home' %}">Home</a></li>
-    <li class="breadcrumb-item active">{{ room }}</li>
-</ol>
+<nav class="flex items-center text-sm text-gray-500 mb-6">
+    <a href="{% url 'home' %}" class="hover:text-indigo-600 transition-colors">Home</a>
+    <span class="mx-2">/</span>
+    <span class="text-gray-700">{{ room }}</span>
+</nav>
+
 <!-- Calendar -->
-<div class="mb-5">
-    <!-- FullCalendar -->
+<div class="mb-8 bg-white rounded-lg shadow p-4">
     <div id="calendar"></div>
 </div>
-<!-- Cancel/Confirm Btn -->
-<div class="row mb-5">
-    <div class="col text-end">
-        <a href="{% url 'room' room.pk %}" id="cancelBtn" class="btn btn-secondary disabled">キャンセル</a>
-    </div>
-    <form class="col" action="" method="POST">
-        {% csrf_token %}
-        <input type="hidden" name="room", value={{ room.pk }}>
-        <input type="hidden" name="user", value={{ user.pk }}>
-        <input type="hidden" name="title", value="", id="inputTitle">
-        <input type="hidden" name="start_time",value="", id="inputStartTime">
-        <input type="hidden" name="end_time", value="", id="inputEndTime">
 
-        <button id="confirmBtn" type="submit" class="btn btn-primary disabled">予約を確定する</button>
+<!-- Cancel/Confirm Buttons -->
+<div class="flex justify-end items-center gap-4 mb-8">
+    <a
+        href="{% url 'room' room.pk %}"
+        id="cancelBtn"
+        class="px-4 py-2 rounded bg-gray-400 text-white text-sm opacity-50 pointer-events-none transition-colors hover:bg-gray-500"
+    >
+        キャンセル
+    </a>
+    <form action="" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="room" value="{{ room.pk }}">
+        <input type="hidden" name="user" value="{{ user.pk }}">
+        <input type="hidden" name="title" value="" id="inputTitle">
+        <input type="hidden" name="start_time" value="" id="inputStartTime">
+        <input type="hidden" name="end_time" value="" id="inputEndTime">
+        <button
+            id="confirmBtn"
+            type="submit"
+            class="px-4 py-2 rounded bg-blue-600 text-white text-sm opacity-50 pointer-events-none transition-colors hover:bg-blue-700"
+        >
+            予約を確定する
+        </button>
     </form>
-</div>            
+</div>
 
 {% endblock content %}
 
 
 {% block script %}
- <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
- <script>
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js'></script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         //日時をDjangoに適した形にフォーマット
         function formatDateTime(datetime){
@@ -53,7 +65,7 @@
         var calendarEl = document.getElementById('calendar');
 
         // Djangoから渡された予約情報のJSON
-        const eventsJson = '{{ events|default:"[]"|safe }}'; 
+        const eventsJson = '{{ events|default:"[]"|safe }}';
 
         let events = [];
         if (eventsJson && eventsJson.trim() !== '') {
@@ -64,22 +76,35 @@
             }
         }
 
+        const isMobile = () => window.innerWidth < 768;
+
         //FullCalendar設定
         var calendar = new FullCalendar.Calendar(calendarEl, {
             events: events,
-            initialView: 'timeGridWeek',
-            allDaySlot:false,
-            height:500,
+            initialView: isMobile() ? 'timeGridDay' : 'timeGridWeek',
+            allDaySlot: false,
+            height: isMobile() ? 600 : 650,
             locale: 'ja',
-            timeZone:'Asia/Tokyo',
-            slotMinTime: '07:00:00',
+            firstDay: 1,
+            slotLabelFormat: { hour: '2-digit', minute: '2-digit', hour12: false },
+            timeZone: 'Asia/Tokyo',
+            slotMinTime: '08:00:00',
             slotMaxTime: '20:00:00',
             slotDuration: '00:30:00',
             businessHours: true,
-            headerToolbar: {
-                left: 'prev,next today',
-                center: 'title',
-                right: 'timeGridWeek,timeGridDay'
+            headerToolbar: isMobile()
+                ? { left: 'prev,next', center: 'title', right: 'today' }
+                : { left: 'prev,next today', center: 'title', right: 'timeGridWeek,timeGridDay' },
+            windowResize: function() {
+                if (isMobile()) {
+                    calendar.changeView('timeGridDay');
+                    calendar.setOption('height', 600);
+                    calendar.setOption('headerToolbar', { left: 'prev,next', center: 'title', right: 'today' });
+                } else {
+                    calendar.changeView('timeGridWeek');
+                    calendar.setOption('height', 650);
+                    calendar.setOption('headerToolbar', { left: 'prev,next today', center: 'title', right: 'timeGridWeek,timeGridDay' });
+                }
             },
             eventBackgroundColor: '#eb8b73',
             eventBorderColor: '#d45f42',
@@ -96,48 +121,45 @@
                         end: info.end,
                     });
                     //formに入力値を反映、ボタンを有効化
-                    var inputTitle =  document.getElementById('inputTitle');
-                    var inputStartTime =  document.getElementById('inputStartTime');
-                    var inputEndTime =  document.getElementById('inputEndTime');
-                    inputTitle.value = bookingTitle;
-                    inputStartTime.value = formatDateTime(info.start);
-                    inputEndTime.value = formatDateTime(info.end);
-                    document.getElementById('confirmBtn').classList.remove('disabled');
-                    document.getElementById('cancelBtn').classList.remove('disabled');
+                    document.getElementById('inputTitle').value = bookingTitle;
+                    document.getElementById('inputStartTime').value = formatDateTime(info.start);
+                    document.getElementById('inputEndTime').value = formatDateTime(info.end);
+                    document.getElementById('confirmBtn').classList.remove('opacity-50', 'pointer-events-none');
+                    document.getElementById('cancelBtn').classList.remove('opacity-50', 'pointer-events-none');
                 }
             },
 
             //予約の削除
             eventClick: function(info) {
                 if (confirm('この予約を削除してよろしいですか？')) {
-                    // Djangoの削除URLを作成
                     let eventId = info.event.id;
                     let url = `/delete_event/${eventId}/`;
-                     // fetch API で Django に削除リクエストを送信
                     fetch(url, {
                         method: 'POST',
                         headers: {
-                            'X-CSRFToken': getCookie('csrftoken'), // DjangoのCSRFトークン
+                            'X-CSRFToken': getCookie('csrftoken'),
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            event_id : eventId
-                        }),
+                        body: JSON.stringify({ event_id: eventId }),
                     })
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            // カレンダー上からイベントを削除
-                            info.event.remove(); 
+                            info.event.remove();
                         }
                     });
+                }
             }
+        });
+        calendar.render();
+
+        // サイドバー開閉でメインコンテンツ幅が変わったとき、カレンダーをリサイズ
+        const mainContent = document.querySelector('.content-wrap');
+        if (mainContent) {
+            new ResizeObserver(() => calendar.updateSize()).observe(mainContent);
         }
-      });
-      calendar.render();
     });
 
-    
     // CSRFトークンを取得するヘルパー関数
     function getCookie(name) {
         let cookieValue = null;
@@ -153,5 +175,5 @@
         }
         return cookieValue;
     }
-  </script>
+</script>
 {% endblock script %}
